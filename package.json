@@ -1,0 +1,11 @@
+{
+  "name": "fazliddin-digital",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {"node": "22.x"},
+  "scripts": {
+    "build": "node scripts/check-secrets.js && node scripts/build.js",
+    "test": "node --test tests/*.test.js",
+    "check:secrets": "node scripts/check-secrets.js"
+  }
+}

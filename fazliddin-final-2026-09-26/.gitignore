@@ -1,0 +1,19 @@
+.env
+.env.*
+!.env.example
+.vercel/
+node_modules/
+public/
+.DS_Store
+*.log
+*.zip
+*.pem
+*.key
+credentials*.json
+service-account*.json
+secrets/
+work/
+backup/
+# Filled private Apps Script config must never be committed.
+PrivateSettings.gs
+**/PrivateSettings.gs

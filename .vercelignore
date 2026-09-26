@@ -1,0 +1,10 @@
+.env*
+.git/
+.github/
+tests/
+google-apps-script/
+*.md
+*.zip
+work/
+.githooks/
+**/PrivateSettings.gs
