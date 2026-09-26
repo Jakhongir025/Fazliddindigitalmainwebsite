@@ -38,3 +38,21 @@ test('success requires signed, confirmed storage; payload is never a query strin
   const bad=response();await handler(req(),bad);assert.equal(bad.statusCode,503);
  }finally{global.fetch=old;}
 });
+
+test('production domain fallback and pasted trailing slash work without trusting request hosts',()=>{
+ const saved={...process.env};
+ try{
+  process.env.SITE_ORIGIN='  https://example.com/  ';
+  assert.equal(configuration().origin,'https://example.com');
+  delete process.env.SITE_ORIGIN;process.env.VERCEL_PROJECT_PRODUCTION_URL='fazliddindigitalmainwebsite.vercel.app';
+  assert.equal(configuration().origin,'https://fazliddindigitalmainwebsite.vercel.app');
+  delete process.env.VERCEL_PROJECT_PRODUCTION_URL;assert.equal(configuration(),null);
+  for(const bad of ['https://example.com/path','https://user:pass@example.com','http://example.com']){process.env.SITE_ORIGIN=bad;assert.equal(configuration(),null);}
+ }finally{for(const key of Object.keys(process.env))if(!(key in saved))delete process.env[key];Object.assign(process.env,saved);}
+});
+test('diagnostics contain only variable names and do not enable incomplete integration',()=>{
+ const {configurationIssues}=require('../lib/leads');
+ assert.deepEqual(configurationIssues({}).sort(),['SITE_ORIGIN','APPS_SCRIPT_URL','APPS_SCRIPT_SECRET','UPSTASH_REDIS_REST_URL','UPSTASH_REDIS_REST_TOKEN'].sort());
+ const bad={...env,APPS_SCRIPT_SECRET:'short',APPS_SCRIPT_URL:'https://example.com/private'};
+ assert.deepEqual(configurationIssues(bad).sort(),['APPS_SCRIPT_URL','APPS_SCRIPT_SECRET'].sort());
+});

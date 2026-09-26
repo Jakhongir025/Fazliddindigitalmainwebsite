@@ -61,7 +61,7 @@ Tashkilot hisobida “Anyone” taqiqlangan bo‘lsa, administratorga murojaat q
 
 | Nom | Qiymat |
 |---|---|
-| SITE_ORIGIN | `https://fazliddinads.vercel.app` — oxirida `/`siz; domen o‘zgarsa yangisini yozing |
+| SITE_ORIGIN | `https://fazliddindigitalmainwebsite.vercel.app` — oxirida `/`siz; domen o‘zgarsa yangisini yozing |
 | APPS_SCRIPT_URL | 4-qadamdagi `/exec` havola |
 | APPS_SCRIPT_SECRET | Google PrivateSettingsdagi kalitning aynan o‘zi |
 | UPSTASH_REDIS_REST_URL | Upstash REST URL |
@@ -89,3 +89,9 @@ Google Apps Scriptdagi **Code.gs**ni yangilang → **Deploy → Manage deploymen
 Kod avtomatik sinovlardan o‘tgan. Sizning haqiqiy Google va Telegram hisoblaringizga hali ulanmagan; yakuniy jonli tekshiruv 7-qadamda bajariladi.
 
 Rasmiy yordam: [Google Apps Script web apps](https://developers.google.com/apps-script/guides/web), [Telegram Bot API](https://core.telegram.org/bots/api#getupdates), [Vercel environment variables](https://vercel.com/docs/environment-variables).
+
+## Forma o‘chirilgan bo‘lsa
+
+`/api/config` javobidagi `enabled: false` server sozlamalari yetishmayotganini yoki noto‘g‘riligini bildiradi. Vercel → Settings → Environment Variables bo‘limiga yuqoridagi beshta qiymatni Production muhiti uchun kiriting, keyin Redeploy qiling. Maxfiy qiymatlarni GitHubga yozmang.
+
+Vercel Logs ichida `Lead form configuration missing or invalid:` yozuvidan keyin aynan qaysi maydonlarni to‘g‘rilash kerakligi chiqadi; qiymatlar yozilmaydi. SITE_ORIGIN kiritilmagan bo‘lsa, Vercelning VERCEL_PROJECT_PRODUCTION_URL qiymati ishlatiladi. SITE_ORIGIN kiritilgan bo‘lsa, u ochilgan sayt domeniga mos bo‘lishi kerak.
