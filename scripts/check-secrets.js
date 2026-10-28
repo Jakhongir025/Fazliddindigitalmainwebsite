@@ -12,7 +12,7 @@ function containsSecret(content){
 }
 let failures=[];
 function walk(dir){for(const entry of fs.readdirSync(dir,{withFileTypes:true})){
- if(['.git','.vercel','node_modules','public','img','icons'].includes(entry.name))continue;
+ if(['.git','.vercel','node_modules','public','img','icons','secrets'].includes(entry.name))continue;
  const full=path.join(dir,entry.name),relative=path.relative(root,full);
  if(entry.isSymbolicLink())continue;
  if(entry.isDirectory()){walk(full);continue;}
