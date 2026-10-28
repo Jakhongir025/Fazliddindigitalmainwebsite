@@ -1,3 +1,5 @@
+> 2026-10-28: Yangi sozlash tartibi: [OSON-ULASH.md](OSON-ULASH.md). Telegram faqat shaxsiy IDlarga yuboradi; eski guruhga yuborish ko‘rsatmalari endi amal qilmaydi.
+
 > Yangi ketma-ket yo‘riqnoma: [ULASH-QADAMLARI.md](ULASH-QADAMLARI.md). Arizalar endi Bishkek vaqti bo‘yicha YYYY-MM-DD kunlik varaqlarga ham yoziladi, forma tartibidagi ustunlar va filtr bilan. Umumiy Leads saqlanadi. Google Code.gsni yangilab, deploymentning yangi versiyasini chiqaring.
 
 # Fazliddin Digital — GitHub va Vercel uchun loyiha

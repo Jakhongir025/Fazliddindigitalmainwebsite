@@ -12,3 +12,15 @@ test('secret guard detects staged content even if working file was cleaned, with
   assert.equal(result.status,1);assert.match(result.stderr,/staged content/);assert.ok(!result.stderr.includes(fixture));
  }finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
+
+test('spreadsheet links and configured Telegram IDs are blocked without exposing values',()=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'lead-private-test-'));
+ try{
+  fs.mkdirSync(path.join(dir,'scripts'));fs.copyFileSync(path.join(__dirname,'../scripts/check-secrets.js'),path.join(dir,'scripts/check-secrets.js'));
+  for(const value of ['https://docs.google.com/spreadsheets/d/'+'a'.repeat(32)+'/edit', 'TELEGRAM_CHAT_IDS: "'+['987654321','123456789'].join(',')+'"']){
+   fs.writeFileSync(path.join(dir,'private-copy.txt'),value);
+   const result=cp.spawnSync(process.execPath,['scripts/check-secrets.js'],{cwd:dir,encoding:'utf8'});
+   assert.equal(result.status,1);assert.ok(!result.stderr.includes(value));
+  }
+ }finally{fs.rmSync(dir,{recursive:true,force:true});}
+});

@@ -2,6 +2,33 @@
 function output_(value){return ContentService.createTextOutput(JSON.stringify(value)).setMimeType(ContentService.MimeType.JSON);}
 function hex_(bytes){return bytes.map(function(n){return ('0'+((n+256)%256).toString(16)).slice(-2);}).join('');}
 function safeCell_(text){return "'"+String(text||'');}
+// Private values belong in Apps Script Project Settings -> Script Properties.
+function recipientIds_(value){
+ var ids=String(value||'').split(',').map(function(id){return id.trim();}).filter(Boolean);
+ ids=ids.filter(function(id,index){return ids.indexOf(id)===index;});
+ // Only personal Telegram chats; no group/channel destinations or client-supplied IDs.
+ if(!ids.length||ids.length>5||ids.some(function(id){return !/^[1-9][0-9]{0,15}$/.test(id);}))throw Error('recipients');
+ return ids;
+}
+function spreadsheetId_(value){
+ var text=String(value||'').trim();
+ var match=text.match(/^https:\/\/docs\.google\.com\/spreadsheets\/d\/([A-Za-z0-9_-]+)(?:\/[^\s]*)?$/);
+ if(match&&match[1]!=='e')return match[1];
+ if(/^[A-Za-z0-9_-]+$/.test(text))return text;
+ throw Error('spreadsheet');
+}
+function setupConnection(){
+ var props=PropertiesService.getScriptProperties();
+ recipientIds_(props.getProperty('TELEGRAM_CHAT_IDS'));
+ if(!props.getProperty('TELEGRAM_BOT_TOKEN'))throw Error('Add TELEGRAM_BOT_TOKEN in Script Properties');
+ var input=props.getProperty('SPREADSHEET_URL')||props.getProperty('SPREADSHEET_ID');
+ var book=input?SpreadsheetApp.openById(spreadsheetId_(input)):SpreadsheetApp.getActiveSpreadsheet();
+ if(!book)throw Error('Add SPREADSHEET_URL in Script Properties');
+ props.setProperty('SPREADSHEET_ID',book.getId());
+ if(!props.getProperty('APPS_SCRIPT_SECRET'))props.setProperty('APPS_SCRIPT_SECRET',Utilities.getUuid().replace(/-/g,'')+Utilities.getUuid().replace(/-/g,''));
+ if(props.getProperty('APPS_SCRIPT_SECRET').length<32)throw Error('APPS_SCRIPT_SECRET must contain at least 32 characters');
+ // Deliberately do not log the URL, token, IDs or secret.
+}
 // Dates use server receipt time, never the visitor's device clock.
 function findLead_(sheet,id,column){
  if(sheet.getLastRow()<2)return null;
@@ -38,9 +65,9 @@ function doPost(e){
   // Optional code-based configuration lives only in your private Apps Script project.
   var scriptProps=PropertiesService.getScriptProperties();
   var privateSettings=(typeof PRIVATE_SETTINGS!=='undefined')?PRIVATE_SETTINGS:{};
-  var props={getProperty:function(key){return privateSettings[key]||scriptProps.getProperty(key);}};
-  var secret=props.getProperty('APPS_SCRIPT_SECRET'),sheetId=props.getProperty('SPREADSHEET_ID');
-  var bot=props.getProperty('TELEGRAM_BOT_TOKEN'),chats=(props.getProperty('TELEGRAM_CHAT_IDS')||'').split(',').map(function(x){return x.trim();}).filter(Boolean);
+  var props={getProperty:function(key){return scriptProps.getProperty(key)||privateSettings[key];}};
+  var secret=props.getProperty('APPS_SCRIPT_SECRET'),sheetId=spreadsheetId_(props.getProperty('SPREADSHEET_URL')||props.getProperty('SPREADSHEET_ID'));
+  var bot=props.getProperty('TELEGRAM_BOT_TOKEN'),chats=recipientIds_(props.getProperty('TELEGRAM_CHAT_IDS'));
   if(!secret||secret.length<32||!sheetId||!bot||chats.length<1||chats.length>5||chats.some(function(x){return !/^-?\d+$/.test(x);}))throw Error('configuration');
   if(!e||!e.postData||e.postData.contents.length>14000)throw Error('body');
   var envelope=JSON.parse(e.postData.contents);

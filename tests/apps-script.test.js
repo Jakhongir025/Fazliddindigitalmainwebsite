@@ -2,7 +2,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const crypto=require('node:crypto');
 function harness(){
- const rows=[];let sends=0,telegramOK=true;
+ const rows=[];let sends=0,telegramOK=true;const recipients=[];
  const secret='s'.repeat(40),props={APPS_SCRIPT_SECRET:secret,SPREADSHEET_ID:'test-sheet',TELEGRAM_BOT_TOKEN:'test-bot',TELEGRAM_CHAT_IDS:'1,2'};
  const sheets={};
  function makeSheet(name,data=[]){
@@ -19,11 +19,11 @@ function harness(){
   const p=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(date).map(x=>[x.type,x.value]));
   return format==='yyyy-MM-dd'?`${p.year}-${p.month}-${p.day}`:`${p.hour}:${p.minute}:${p.second}`;
  }
- const box={Date,JSON,Math,Error,ContentService:{MimeType:{JSON:'json'},createTextOutput:text=>({setMimeType:()=>JSON.parse(text)})},PropertiesService:{getScriptProperties:()=>({getProperty:k=>props[k]})},Utilities:{formatDate,Charset:{UTF_8:'utf8'},DigestAlgorithm:{SHA_256:'sha256'},computeHmacSha256Signature:(s,k)=>[...crypto.createHmac('sha256',k).update(s).digest()],computeDigest:(_,s)=>[...crypto.createHash('sha256').update(s).digest()]},LockService:{getScriptLock:()=>({tryLock:()=>true,releaseLock:()=>{}})},SpreadsheetApp:{openById:()=>({getSheetByName:name=>sheets[name],insertSheet:name=>makeSheet(name)}),flush:()=>{}},UrlFetchApp:{fetch:()=>{sends++;return {getResponseCode:()=>telegramOK?200:500,getContentText:()=>JSON.stringify({ok:telegramOK})};}}};
+ const box={Date,JSON,Math,Error,ContentService:{MimeType:{JSON:'json'},createTextOutput:text=>({setMimeType:()=>JSON.parse(text)})},PropertiesService:{getScriptProperties:()=>({getProperty:k=>props[k]})},Utilities:{formatDate,Charset:{UTF_8:'utf8'},DigestAlgorithm:{SHA_256:'sha256'},computeHmacSha256Signature:(s,k)=>[...crypto.createHmac('sha256',k).update(s).digest()],computeDigest:(_,s)=>[...crypto.createHash('sha256').update(s).digest()]},LockService:{getScriptLock:()=>({tryLock:()=>true,releaseLock:()=>{}})},SpreadsheetApp:{openById:()=>({getSheetByName:name=>sheets[name],insertSheet:name=>makeSheet(name)}),flush:()=>{}},UrlFetchApp:{fetch:(url,options)=>{recipients.push(JSON.parse(options.payload).chat_id);sends++;return {getResponseCode:()=>telegramOK?200:500,getContentText:()=>JSON.stringify({ok:telegramOK})};}}};
  vm.createContext(box);vm.runInContext(fs.readFileSync(path.join(__dirname,'../google-apps-script/Code.gs'),'utf8'),box);
  const lead={requestId:'12345678-1234-4234-8234-123456789abc',name:'=IMPORTXML("x")',phone:'@example_user',service:'targeting',plan:'business',business:'education',message:'=1+1',website:'',lang:'ky'};
  function envelope(d=lead,t=Date.now()){const payload=JSON.stringify(d),timestamp=String(t),signature=crypto.createHmac('sha256',secret).update(timestamp+'.'+payload).digest('hex');return {postData:{contents:JSON.stringify({payload,timestamp,signature})}};}
- return {box,rows,sheets,envelope,lead,props,sends:()=>sends,failTelegram:()=>{telegramOK=false;}};
+ return {box,rows,sheets,recipients,envelope,lead,props,sends:()=>sends,failTelegram:()=>{telegramOK=false;}};
 }
 test('valid request saves literal cells, sends separately and duplicate does not resend',()=>{
  const h=harness(),r=h.box.doPost(h.envelope());assert.equal(r.ok,true);assert.equal(h.rows.length,2);assert.ok(h.rows[1][2].startsWith("'="));assert.ok(h.rows[1][6].startsWith("'="));assert.equal(h.sends(),2);assert.equal(h.rows[1][10],'business');
@@ -57,4 +57,29 @@ test('date boundary uses original receipt date even when retry happens later',()
  h.rows[1][1]='2026-09-26T18:30:00.000Z';
  assert.equal(h.box.doPost(h.envelope()).duplicate,true);
  assert.equal(h.sheets['2026-09-27'].rows[1][6],'00:30:00');assert.equal(h.sends(),2);
+});
+
+test('only configured personal IDs receive Telegram messages; duplicates are removed',()=>{
+ const h=harness();h.props.TELEGRAM_CHAT_IDS=['101','202','101'].join(',');
+ assert.equal(h.box.doPost(h.envelope({...h.lead,chat_id:'999',recipients:['999']})).ok,true);
+ assert.deepEqual(h.recipients,['101','202']);
+ const invalid=harness();invalid.props.TELEGRAM_CHAT_IDS=String(-100123);
+ assert.equal(invalid.box.doPost(invalid.envelope()).ok,false);assert.equal(invalid.sends(),0);
+});
+test('Google Sheets full URL is accepted; untrusted hosts and public share links are rejected',()=>{
+ const h=harness();h.props['SPREADSHEET_URL']='https://docs.google.com/spreadsheets/d/'+'sheet-example-123'+'/edit#gid=0';delete h.props.SPREADSHEET_ID;
+ assert.equal(h.box.doPost(h.envelope()).ok,true);
+ assert.equal(h.box.spreadsheetId_(h.props.SPREADSHEET_URL),'sheet-example-123');
+ for(const bad of ['https://evil.example/spreadsheets/d/abc/edit','https://docs.google.com.evil.example/spreadsheets/d/abc/edit','https://docs.google.com/spreadsheets/d/e/pubhtml']){
+  assert.throws(()=>h.box.spreadsheetId_(bad));
+ }
+});
+test('setup selects the bound sheet and generates a secret only once',()=>{
+ const h=harness();delete h.props.SPREADSHEET_ID;delete h.props.APPS_SCRIPT_SECRET;
+ h.box.PropertiesService={getScriptProperties:()=>({getProperty:key=>h.props[key],setProperty:(key,value)=>{h.props[key]=value;}})};
+ h.box.SpreadsheetApp.getActiveSpreadsheet=()=>({getId:()=> 'bound-sheet'});
+ h.box.SpreadsheetApp.openById=()=>({getId:()=> 'bound-sheet'});
+ h.box.Utilities.getUuid=()=>crypto.randomUUID();
+ h.box.setupConnection();assert.equal(h.props.SPREADSHEET_ID,'bound-sheet');assert.equal(h.props.APPS_SCRIPT_SECRET.length,64);
+ const secret=h.props.APPS_SCRIPT_SECRET;h.box.setupConnection();assert.equal(h.props.APPS_SCRIPT_SECRET,secret);
 });

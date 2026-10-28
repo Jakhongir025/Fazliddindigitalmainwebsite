@@ -1,3 +1,5 @@
+> 2026-10-28: Yangi sozlash tartibi: [OSON-ULASH.md](OSON-ULASH.md). Telegram faqat shaxsiy IDlarga yuboradi; eski guruhga yuborish ko‘rsatmalari endi amal qilmaydi.
+
 # Google Sheets va Telegramni ulash — ketma-ket yo‘riqnoma
 
 ## 1. Telegram bot yarating

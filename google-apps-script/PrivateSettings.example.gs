@@ -12,11 +12,14 @@ var PRIVATE_SETTINGS = {
   // New token from BotFather. Revoke the previously exposed token first.
   TELEGRAM_BOT_TOKEN: '',
 
-  // Numeric chat IDs separated by commas; no t.me URL here.
+  // Personal Telegram user IDs separated by commas; each person must Start the bot.
   TELEGRAM_CHAT_IDS: '',
 
   // Only the ID between /d/ and /edit in your Google Sheets URL.
   SPREADSHEET_ID: '',
+
+  // Alternatively paste the full Google Sheets URL ONLY in the private Google project.
+  SPREADSHEET_URL: '',
 
   // A random 32+ character secret, identical to Vercel APPS_SCRIPT_SECRET.
   APPS_SCRIPT_SECRET: '',

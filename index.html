@@ -1,4 +1,4 @@
-<!doctype html><html lang="ky"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-5uyrGybzyFkXStedhYj9tK9A1BpdrJP+fxi68kD/XHE='; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none'"><meta name="referrer" content="strict-origin-when-cross-origin"><meta name="description" content="Instagram жана Facebook үчүн таргет жарнама: аудит, аудитория, креативдерди тестирлөө жана оптимизация. Start, Бизнес жана Premium. Акысыз консультация."><title>Fazliddin Digital — Instagram жана Facebook таргет жарнамасы</title>
+<!doctype html><html lang="ky"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-p/v97lLh+D9MRFTy8jp4Gv/9qQYbH3Y6FQKSjZgJxOM='; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none'"><meta name="referrer" content="strict-origin-when-cross-origin"><meta name="description" content="Instagram жана Facebook үчүн таргет жарнама: аудит, аудитория, креативдерди тестирлөө жана оптимизация. Start, Бизнес жана Premium. Акысыз консультация."><title>Fazliddin Digital — Instagram жана Facebook таргет жарнамасы</title>
 <link rel="canonical" href="https://fazliddinads.vercel.app/">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <meta name="theme-color" content="#142238">
@@ -142,25 +142,30 @@ function finalValue(el){return el.dataset.prefix+Number(el.dataset.count).toLoca
 function finishStats(){frames.forEach(cancelAnimationFrame);frames.clear();statsCard.classList.remove('stats-animate');counters.forEach(el=>el.textContent=finalValue(el));}
 function animateStats(){
  if(statsStarted)return;statsStarted=true;
- if(reducedMotion.matches)return;
+ if(reducedMotion.matches){finishStats();return;}
  statsCard.classList.add('stats-animate');
  counters.forEach((el,index)=>{
   const start=performance.now()+300+index*180;
   const target=Number(el.dataset.count);
   el.textContent=el.dataset.prefix+'0'+el.dataset.suffix;
+  let frameId;
+  function schedule(){frameId=requestAnimationFrame(tick);frames.add(frameId);}
   function tick(now){
+   frames.delete(frameId);
    const progress=Math.max(0,Math.min((now-start)/1500,1));
    const amount=Math.floor(target*(1-Math.pow(1-progress,3)));
    el.textContent=el.dataset.prefix+amount.toLocaleString('en-US')+el.dataset.suffix;
-   if(progress<1){const id=requestAnimationFrame(tick);frames.add(id);}
+   if(progress<1)schedule();
    else el.textContent=finalValue(el);
   }
-  const id=requestAnimationFrame(tick);frames.add(id);
+  schedule();
  });
 }
 if('IntersectionObserver' in window){
  const statsObserver=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting)){animateStats();statsObserver.disconnect();}},{threshold:.15});
  statsObserver.observe(statsCard);
 }else animateStats();
-reducedMotion.addEventListener('change',e=>{if(e.matches)finishStats();});
+const motionChanged=e=>{if(e.matches)finishStats();};
+if(reducedMotion.addEventListener)reducedMotion.addEventListener('change',motionChanged);
+else if(reducedMotion.addListener)reducedMotion.addListener(motionChanged);
 </script></body></html>
