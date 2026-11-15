@@ -8,3 +8,7 @@ google-apps-script/
 work/
 .githooks/
 **/PrivateSettings.gs
+
+secrets/
+backup/
+fazliddin-private-archive-*/

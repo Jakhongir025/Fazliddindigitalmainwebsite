@@ -1,4 +1,4 @@
-<!doctype html><html lang="ky"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-e3+bcQd99//ZVEsi/7ccjwqf63UWoOy8Oq9b3gqUHzg='; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none'"><meta name="referrer" content="strict-origin-when-cross-origin"><meta name="description" content="Instagram жана Facebook үчүн таргет жарнама: аудит, аудитория, креативдерди тестирлөө жана оптимизация. Start, Бизнес жана Premium. Акысыз консультация."><title>Fazliddin Digital — Instagram жана Facebook таргет жарнамасы</title>
+<!doctype html><html lang="ky"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-MMnimFjOWOaqYNr4hn2dAbKI6Ee6CAFx8X5JmBCQEyQ='; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none'"><meta name="referrer" content="strict-origin-when-cross-origin"><meta name="description" content="Instagram жана Facebook үчүн таргет жарнама: аудит, аудитория, креативдерди тестирлөө жана оптимизация. Start, Бизнес жана Premium. Акысыз консультация."><title>Fazliddin Digital — Instagram жана Facebook таргет жарнамасы</title>
 <link rel="canonical" href="https://fazliddindigitalmainwebsite.vercel.app/">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <meta name="theme-color" content="#142238">
@@ -172,9 +172,25 @@ if(motionOK.matches && 'IntersectionObserver' in window){
  document.querySelectorAll('.stage-card,.portrait,.service,.plan-card,.case,.logo,.callband,.contact').forEach(el=>io.observe(el));
 }
 const fine=matchMedia('(hover:hover) and (pointer:fine)'),aura=document.querySelector('.cursor-aura');
-let auraFrame=0,ax=0,ay=0;
-window.addEventListener('pointermove',e=>{if(!fine.matches||!motionOK.matches||e.pointerType==='touch')return;ax=e.clientX;ay=e.clientY;if(!auraFrame)auraFrame=requestAnimationFrame(()=>{aura.style.transform='translate3d('+ax+'px,'+ay+'px,0)';aura.style.opacity='1';auraFrame=0;});},{passive:true});
-document.documentElement.addEventListener('pointerleave',()=>{cancelAnimationFrame(auraFrame);auraFrame=0;aura.style.opacity='0';});
+let auraFrame=0, ax=0, ay=0, x=0, y=0, last=0, visible=false;
+function glide(now){
+ const weight=1-Math.exp(-Math.max(0,now-last)/65);last=now;
+ x+=(ax-x)*weight;y+=(ay-y)*weight;
+ const settled=Math.hypot(ax-x,ay-y)<0.25;
+ if(settled){x=ax;y=ay;}
+ aura.style.transform='translate3d('+x+'px,'+y+'px,0)';
+ aura.style.opacity='1';
+ auraFrame=settled?0:requestAnimationFrame(glide);
+}
+window.addEventListener('pointermove',e=>{
+ if(!fine.matches||!motionOK.matches||e.pointerType==='touch')return;
+ ax=e.clientX;ay=e.clientY;
+ if(!visible){x=ax;y=ay;visible=true;}
+ if(!auraFrame){last=performance.now();auraFrame=requestAnimationFrame(glide);}
+},{passive:true});
+function hideAura(){cancelAnimationFrame(auraFrame);auraFrame=0;visible=false;aura.style.opacity='0';}
+document.documentElement.addEventListener('pointerleave',hideAura);
+window.addEventListener('blur',hideAura);
 
 // Reveal the whole statistics card once, when it enters view.
 const statsCard=document.querySelector('.hero-aside');

@@ -17,3 +17,6 @@ backup/
 # Filled private Apps Script config must never be committed.
 PrivateSettings.gs
 **/PrivateSettings.gs
+
+# Local backup directories
+fazliddin-private-archive-*/
