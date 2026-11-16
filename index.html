@@ -1,4 +1,4 @@
-<!doctype html><html lang="ky"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-K8psvc4rIfTDzmElplj28Fs9l7qpKOQl2+UzfXJzoAg='; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none'"><meta name="referrer" content="strict-origin-when-cross-origin"><meta name="description" content="Instagram жана Facebook үчүн таргет жарнама: аудит, аудитория, креативдерди тестирлөө жана оптимизация. Акысыз консультация."><title>Fazliddin Abdullaev — Instagram жана Facebook таргет жарнамасы</title>
+<!doctype html><html lang="ky"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-3g+YeOj9Fi9suvEFO0pJqEKSRp5z9ImI2G1i5gBEWV4='; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none'"><meta name="referrer" content="strict-origin-when-cross-origin"><meta name="description" content="Instagram жана Facebook үчүн таргет жарнама: аудит, аудитория, креативдерди тестирлөө жана оптимизация. Акысыз консультация."><title>Fazliddin Abdullaev — Instagram жана Facebook таргет жарнамасы</title>
 <link rel="canonical" href="https://fazliddindigitalmainwebsite.vercel.app/">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <meta name="theme-color" content="#142238">
@@ -156,7 +156,19 @@ if(location.protocol==='https:'||location.hostname==='localhost'||location.hostn
 const motionOK=matchMedia('(prefers-reduced-motion:no-preference)');
 if(motionOK.matches && 'IntersectionObserver' in window){
  const io=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('arrive');io.unobserve(e.target);}}));
- document.querySelectorAll('.stage-card,.portrait,.service,.plan-card,.case,.logo,.callband,.contact').forEach(el=>io.observe(el));
+ document.querySelectorAll('.portrait,.case,.callband,.contact').forEach(el=>io.observe(el));
+ const clients=document.querySelector('.partners .logo-grid');
+ if(clients){
+  const observer=new IntersectionObserver(entries=>{
+   if(!entries.some(entry=>entry.isIntersecting))return;
+   observer.disconnect();
+   clients.querySelectorAll('.logo').forEach((card,index)=>{
+    card.style.animationDelay=(index*85)+'ms';
+    card.classList.add('arrive');
+   });
+  });
+  observer.observe(clients);
+ }
 }
 const fine=matchMedia('(hover:hover) and (pointer:fine)'),aura=document.querySelector('.cursor-aura');
 let auraFrame=0, ax=0, ay=0, x=0, y=0, last=0, visible=false;
